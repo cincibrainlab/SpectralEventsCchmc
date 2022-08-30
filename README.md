@@ -4,6 +4,8 @@
 
 This toolbox is composed of a series of functions that find and analyze transient spectral activity (spectral events) in a time-series dataset, allowing for spectral event feature comparison between trial outcomes/conditions. Spectral events are defined as local maxima above a power threshold of a specified band in the non-averaged time-frequency responses (TFR).
 
+This fork is being used at CCHMC for testing purposes. Changes are made to incorporate different threshold methods for the `spectralevents_find` function. 
+
 ## Functions
 ### spectralevents
 ```
