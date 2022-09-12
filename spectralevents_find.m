@@ -136,6 +136,7 @@ end
 trialSummary.classLabels = classLabels';
 
 trialSummary.meanpower = mean(squeeze(mean(TFR(eventBand_inds,:,:),2)) ./ repmat(medianpower(eventBand_inds),1,numTrials), 1)'; %Mean trial power normalized to frequency-specific median
+trialSummary.meanpowernonnorm = mean(squeeze(mean(TFR(eventBand_inds,:,:),2)))'; %Non-normalized mean trial power
 
 suprathrTFR = TFR>=repmat(thr,1,tlength,numTrials);
 trialSummary.coverage = squeeze(sum(sum(suprathrTFR(eventBand_inds,:,:),1),2)) *100 / (nnz(eventBand_inds)*tlength); %Calculated in percentage
@@ -143,6 +144,7 @@ trialSummary.coverage = squeeze(sum(sum(suprathrTFR(eventBand_inds,:,:),1),2)) *
 % Initialize column vectors
 trialSummary.eventnumber = nan(numTrials,1);
 trialSummary.meaneventpower = nan(numTrials,1);
+trialSummary.meaneventpowernonnorm = nan(numTrials,1); %Non-normalized mean event power
 trialSummary.meaneventduration = nan(numTrials,1);
 trialSummary.meaneventFspan = nan(numTrials,1);
 trialSummary.mostrecenteventtiming = nan(numTrials,1);
@@ -155,6 +157,7 @@ for tri=1:numTrials
   trialSummary.eventnumber(tri)=nnz(spectralEvents(:,1)==tri);
   if nnz(spectralEvents(:,1)==tri)==0
     trialSummary.meaneventpower(tri) = 0; % traces2TFR always returns a positive value
+    trialSummary.meaneventpowernonnorm(tri) = 0; %Non-normalized mean event power
     trialSummary.meaneventduration(tri) = 0;
     trialSummary.meaneventFspan(tri) = 0;
     trialSummary.mostrecenteventtiming(tri) = tVec(1)-mean(diff(tVec));
@@ -163,6 +166,7 @@ for tri=1:numTrials
     trialSummary.mostrecenteventFspan(tri) = 0;
   else
     trialSummary.meaneventpower(tri) = mean(spectralEvents(spectralEvents(:,eventsind.trialind)==tri,eventsind.maximapowerFOM)); % traces2TFR always returns a positive value
+    trialSummary.meaneventpowernonnorm(tri) = mean(spectralEvents(spectralEvents(:,eventsind.trialind)==tri,eventsind.maximapower)); %Non-normalized mean event power
     trialSummary.meaneventduration(tri) = mean(spectralEvents(spectralEvents(:,eventsind.trialind)==tri,eventsind.duration));
     trialSummary.meaneventFspan(tri) = mean(spectralEvents(spectralEvents(:,eventsind.trialind)==tri,eventsind.Fspan));
     trialSummary.mostrecenteventtiming(tri) = spectralEvents(find(spectralEvents(:,eventsind.trialind)==tri,1,'last'), eventsind.maximatiming);
@@ -174,7 +178,7 @@ end
 
 % Event dependent features (mean power, mean length, most recent timing): 
 % need special treatment for zero event trials
-specialFeat.field = {'meaneventpower','meaneventduration','meaneventFspan','mostrecenteventtiming',...
+specialFeat.field = {'meaneventpower','meaneventpowernonnorm','meaneventduration','meaneventFspan','mostrecenteventtiming',...
     'mostrecenteventpower','mostrecenteventduration','mostrecenteventFspan'};
 
 % Percent change from mean (PCM)
