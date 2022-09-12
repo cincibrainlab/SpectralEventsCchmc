@@ -1,4 +1,4 @@
-function specEv_struct = spectralevents_find(findMethod, eventBand, thrFOM, tVec, fVec, TFR, classLabels)
+function specEv_struct = spectralevents_find(findMethod, eventBand, thrFOM, tVec, fVec, TFR, classLabels, sdThresholdOn)
 % SPECTRALEVENTS_FIND Algorithm for finding and calculating spectral 
 %   events on a trial-by-trial basis of a single subject/session. Uses 
 %   one of three methods before further analyzing and organizing event 
@@ -95,7 +95,14 @@ tlength = size(TFR,2); %Number of points in time
 numTrials = size(TFR,3); %Number of trials
 classes = unique(classLabels);
 medianpower = median(reshape(TFR, size(TFR,1), size(TFR,2)*size(TFR,3)), 2); %Median power at each frequency across all trials
-thr = thrFOM*medianpower; %Spectral event threshold for each frequency value
+
+if(sdThresholdOn)
+  warning("SD THRESHOLD IS NOT FINALIZED")
+  % Standard deviation across time and trials, w = 0 is default
+  thr = (thrFOM * std(TFR, 0, [2, 3])) + medianpower; %Threshold = median + 2 * standard deviation   
+else
+  thr = thrFOM*medianpower; %Spectral event threshold for each frequency value
+end
 
 % Validate consistency of parameter dimensions
 if flength~=length(fVec) || tlength~=length(tVec) || numTrials~=length(classLabels)
@@ -321,8 +328,14 @@ specEv_struct.IEI = IEI;
         % discard those of lesser (un-normalized) magnitude in each suprathreshold 
         % region, respectively, and characterize event boundaries (at half max)
         for ti=1:numTrials
-            TFR_ST = squeeze(TFR(:,:,ti))./medianpower; %Suprathreshold TFR: first isolate 2D TFR matrix and normalize
-            TFR_ST(TFR_ST<thrFOM) = 0; %Set infrathreshold values to zero
+          
+            %TFR_ST = squeeze(TFR(:,:,ti))./medianpower; %Suprathreshold TFR: first isolate 2D TFR matrix and normalize
+            %TFR_ST(TFR_ST<thrFOM) = 0; %Set infrathreshold values to zero
+
+            % Set subthreshold values in TFR to zero
+            TFR_ST = squeeze(TFR(:,:,ti)); % get current trial 
+            TFR_ST(TFR_ST<thr) = 0; % set values below threshold to 0 
+            TFR_ST = TFR_ST./medianpower; % normalize to median power
 
             % Find all local maxima in suprathreshold TFR
             TFR_LM = TFR_ST.*imregionalmax(TFR_ST); %Threshold TFR at each respective local maximum
@@ -445,8 +458,15 @@ specEv_struct.IEI = IEI;
         % discard those of lesser (un-normalized) magnitude in each suprathreshold 
         % region, respectively, and characterize event boundaries (at half max)
         for ti=1:numTrials
-            TFR_ST = squeeze(TFR(:,:,ti))./medianpower; %Suprathreshold TFR: first isolate 2D TFR matrix and normalize
-            TFR_ST(TFR_ST<thrFOM) = 0; %Set infrathreshold values to zero
+         
+            %TFR_ST = squeeze(TFR(:,:,ti))./medianpower; %Suprathreshold TFR: first isolate 2D TFR matrix and normalize
+            %TFR_ST(TFR_ST<thrFOM) = 0; %Set infrathreshold values to zero
+
+            % Set subthreshold values in TFR to zero
+            TFR_ST = squeeze(TFR(:,:,ti)); % get current trial 
+            TFR_ST(TFR_ST<thr) = 0; % set values below threshold to 0 
+            TFR_ST = TFR_ST./medianpower; % normalize to median power 
+
             TFR_ST = TFR_ST.*eventBand_inds; %Set out-of-band values to zero
 
             % Find all local maxima in suprathreshold TFR
